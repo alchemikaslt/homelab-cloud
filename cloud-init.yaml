@@ -48,20 +48,20 @@ users:
 write_files:
 
   # SSH hardening – root login ir password auth išjungti
-  # - path: /etc/ssh/sshd_config.d/99-hardening.conf
-  #   owner: root:root
-  #   permissions: "0600"
-  #   content: |
-  #     PermitRootLogin no
-  #     PasswordAuthentication no
-  #     PubkeyAuthentication yes
-  #     AuthorizedKeysFile .ssh/authorized_keys
-  #     X11Forwarding no
-  #     AllowTcpForwarding no
-  #     ClientAliveInterval 300
-  #     ClientAliveCountMax 2
-  #     MaxAuthTries 3
-  #     LoginGraceTime 30
+  - path: /etc/ssh/sshd_config.d/99-hardening.conf
+    owner: root:root
+    permissions: "0600"
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      PubkeyAuthentication yes
+      AuthorizedKeysFile .ssh/authorized_keys
+      X11Forwarding no
+      AllowTcpForwarding no
+      ClientAliveInterval 300
+      ClientAliveCountMax 2
+      MaxAuthTries 3
+      LoginGraceTime 30
 
   # Docker daemon – log rotacija, saugumo nustatymai
   - path: /etc/docker/daemon.json
