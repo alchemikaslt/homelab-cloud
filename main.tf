@@ -46,36 +46,13 @@ provider "tailscale" {
 provider "time" {
   # Configuration options
 }
-# Pavyzdinis serveris
-resource "hcloud_server" "web" {
-  name        = "homelab-server"
-  server_type = "cx23"
-  image       = "debian-13"
-  location    = var.server_location
-  
-  ssh_keys = [hcloud_ssh_key.my.id, hcloud_ssh_key.egidijos.id]
-  
-  public_net {
-    ipv4_enabled = true
-    ipv6_enabled = false
-  }
 
-  user_data = templatefile("cloud-init.yaml", {
-    tailscale_auth_key = tailscale_tailnet_key.server_key.key
-  })
-
-  labels = {
-    environment = "homelab"
-    managed_by  = "terraform"
-  }
-}
-
-# SSH raktas serverio priėjimui
-resource "hcloud_ssh_key" "my" {
-  name       = "homelab-ssh-key-my"
-  public_key = data.bitwarden-secrets_secret.ssh_public_key.value
-}
-resource "hcloud_ssh_key" "egidijos" {
-  name       = "homelab-ssh-key-egidijos"
-  public_key = data.bitwarden-secrets_secret.ssh_public_key_egidijos.value
+module "server" {
+  source = "./modules/server"
+  hcloud_token            = local.hcloud_token
+  my_ssh_public_key       = data.bitwarden-secrets_secret.ssh_public_key.value
+  egidijos_ssh_public_key = data.bitwarden-secrets_secret.ssh_public_key_egidijos.value
+  ansible_ssh_public_key  = data.bitwarden-secrets_secret.ssh_public_key_egidijos.value
+  tailscale_auth_key      = tailscale_tailnet_key.server_key.key
+  tailscale_tailnet       = var.tailscale_tailnet
 }

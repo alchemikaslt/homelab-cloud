@@ -9,12 +9,13 @@ resource "tailscale_tailnet_key" "server_key" {
 }
 
 resource "time_sleep" "wait_for_tailscale" {
-  depends_on      = [hcloud_server.web]
+  depends_on      = [module.server]
   create_duration = "60s"  # duodam laiko cloud-init užbaigti
 }
 
 data "tailscale_device" "server" {
-  name     = "${hcloud_server.web.name}.${var.tailscale_tailnet}.ts.net"  # turi sutapti su hostname
+  # name     = "${hcloud_server.web.name}.${var.tailscale_tailnet}.ts.net"  # turi sutapti su hostname
+  name     = "${module.server.server_name}.${var.tailscale_tailnet}.ts.net" 
   wait_for = "120s"        # lauks kol device pasirodys API
 
   depends_on = [time_sleep.wait_for_tailscale]

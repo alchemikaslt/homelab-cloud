@@ -31,22 +31,6 @@ variable "secret_ssh_public_key_egidijos_id" {
    type        = string
    sensitive   = true
  }
-# variable "secret_ssh_private_key_id" {
-#   description = "Secret ID su SSH private key"
-#   type        = string
-# }
-
-# variable "secret_db_password_id" {
-#   description = "Secret ID su database password"
-#   type        = string
-# }
-
-# Projekto kintamieji
-variable "server_location" {
-  description = "Hetzner server location"
-  type        = string
-  default     = "fsn1"
-}
 
 variable "secret_tailscale_api_key_id" {
   type = string
@@ -57,6 +41,4 @@ variable "secret_tailscale_tailnet_id" {
 }
 variable "tailscale_tailnet" {
   type    = string
-  # rasi Tailscale admin panelėje: Settings → General → Tailnet name
-  # arba tiesiog pažiūrėk įrenginio FQDN panelėje
 }

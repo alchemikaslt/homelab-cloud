@@ -24,16 +24,6 @@ data "bitwarden-secrets_secret" "tailscale_tailnet" {
     id = var.secret_tailscale_tailnet_id
 }
 
-# # Gauti SSH private key (jei reikia)
-# data "bws_secret" "ssh_private_key" {
-#   id = var.secret_ssh_private_key_id
-# }
-
-# # Gauti database credentials
-# data "bws_secret" "db_password" {
-#   id = var.secret_db_password_id
-# }
-
 # Lokalūs kintamieji patogesniam naudojimui
 locals {
   hcloud_token    = data.bitwarden-secrets_secret.hcloud_token.value
