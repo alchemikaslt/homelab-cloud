@@ -1,0 +1,26 @@
+# Terraform state failai (labai svarbu!)
+*.tfstate
+*.tfstate.*
+*.bw-provider-state
+
+# Crash logai
+crash.log
+
+# Sensitive variables
+*.tfvars
+*.tfvars.json
+
+# Override failai
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform katalogas (provideriai, moduliai cache)
+.terraform/
+
+# VScode
+.vscode/
+
+# Kiti
+old_cloud-init.yaml

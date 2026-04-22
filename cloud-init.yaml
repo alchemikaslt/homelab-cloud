@@ -1,0 +1,187 @@
+#cloud-config
+# =============================================================================
+# Cloud-Init: Base Server Bootstrap
+# OS:      Debian 13
+# Tikslas: ansible vartotojas, Docker + Compose, Tailscale SSH
+#
+# Terraform naudojimas:
+#   templatefile("cloud-init.yml.tpl", {
+#     ansible_ssh_public_key = var.ansible_ssh_public_key
+#     tailscale_auth_key     = tailscale_tailnet_key.bootstrap.key
+#     tailscale_hostname     = var.server_name
+#   })
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# 1. Lokalė ir laiko juosta
+# ---------------------------------------------------------------------------
+locale: en_US.UTF-8
+timezone: Europe/Vilnius
+
+# ---------------------------------------------------------------------------
+# 2. Hostname – paduodamas iš Terraform
+# ---------------------------------------------------------------------------
+preserve_hostname: false
+hostname: ${tailscale_hostname}
+fqdn: ${tailscale_hostname}.example.com
+
+# ---------------------------------------------------------------------------
+# 3. Vartotojai
+#    ansible – vienintelis administracinis vartotojas
+#    Prisijungimas: tik SSH raktu per Tailscale
+# ---------------------------------------------------------------------------
+users:
+  - name: ansible
+    comment: "Ansible Service Account"
+    groups:
+      - sudo
+      - docker
+    shell: /bin/bash
+    lock_passwd: true
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    ssh_authorized_keys:
+      - "${ansible_ssh_public_key}"
+
+# ---------------------------------------------------------------------------
+# 4. Failų rašymas
+# ---------------------------------------------------------------------------
+write_files:
+
+  # SSH hardening – root login ir password auth išjungti
+  - path: /etc/ssh/sshd_config.d/99-hardening.conf
+    owner: root:root
+    permissions: "0600"
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      PubkeyAuthentication yes
+      AuthorizedKeysFile .ssh/authorized_keys
+      X11Forwarding no
+      AllowTcpForwarding no
+      ClientAliveInterval 300
+      ClientAliveCountMax 2
+      MaxAuthTries 3
+      LoginGraceTime 30
+
+  # Docker daemon – log rotacija, saugumo nustatymai
+  - path: /etc/docker/daemon.json
+    owner: root:root
+    permissions: "0644"
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "10m",
+          "max-file": "3"
+        },
+        "live-restore": true,
+        "userland-proxy": false,
+        "no-new-privileges": true
+      }
+
+  # Tailscale auth key – /run (tmpfs), pašalinamas iš karto po prisijungimo
+  - path: /run/tailscale-authkey
+    owner: root:root
+    permissions: "0600"
+    content: "${tailscale_auth_key}"
+
+  # Automatiniai saugumo atnaujinimai
+  - path: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root:root
+    permissions: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+      APT::Periodic::AutocleanInterval "7";
+
+# ---------------------------------------------------------------------------
+# 5. Baziniai paketai
+#    Docker ir Tailscale instaliuojami per runcmd (reikia išorinių repo)
+# ---------------------------------------------------------------------------
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - git
+  - htop
+  - vim
+  - ufw
+  - unattended-upgrades
+  - python3
+  - python3-pip
+
+package_update: true
+package_upgrade: true
+
+# ---------------------------------------------------------------------------
+# 6. runcmd
+# ---------------------------------------------------------------------------
+runcmd:
+
+  # ── DOCKER ────────────────────────────────────────────────────────────────
+  # Oficialus Docker repo – NE Debian docker.io (atsilikusi versija)
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - |
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+      https://download.docker.com/linux/debian \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+  - apt-get update -qq
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - systemctl enable docker
+  - systemctl start docker
+  - usermod -aG docker ansible
+
+  # ── TAILSCALE ─────────────────────────────────────────────────────────────
+  # Oficialus install.sh – paprasčiausias ir rekomenduojamas būdas
+  - curl -fsSL https://tailscale.com/install.sh | sh
+
+  # --ssh            : Tailscale SSH įjungimas (pakeitimas tradicinio SSH per 22)
+  # --authkey        : vienkartinis raktas iš Terraform tailscale_tailnet_key
+  # --hostname       : matomas vardas Tailscale admin console
+  # --accept-dns     : naudoja Tailscale MagicDNS
+  # --accept-routes  : false – serveris neima route'ų iš kitų nodes
+  - |
+    tailscale up \
+      --authkey="${tailscale_auth_key}" \
+      
+      --ssh \
+      --accept-dns=true \
+      --accept-routes=false
+  - rm -f /run/tailscale-authkey
+  - systemctl enable tailscaled
+
+  # ── UFW ───────────────────────────────────────────────────────────────────
+  # fail2ban NEREIKALINGAS – visi inbound portai uždaryti
+  # UFW REIKALINGAS – Docker rašo tiesiai į iptables, reikia kontrolės
+  #
+  # 22/tcp paliekamas TIKTAI kaip emergency fallback:
+  #   Hetzner Firewall → allow 22 iš savo IP → prisijungi → išsprendžia problema
+  #   Įprastu atveju 22 blookuojamas Hetzner Firewall lygyje
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow in on tailscale0 comment "Tailscale – administravimas ir SSH"
+  - ufw allow 22/tcp comment "Emergency fallback – blokuojamas Hetzner Firewall"
+  - ufw --force enable
+
+  # ── SSH ───────────────────────────────────────────────────────────────────
+  - systemctl restart sshd
+
+  # ── BOOTSTRAP MARKER ──────────────────────────────────────────────────────
+  # Ansible gali laukti šio failo: wait_for path=/etc/cloud-init-bootstrap-complete
+  - touch /etc/cloud-init-bootstrap-complete
+  - echo "Bootstrap completed at $(date --iso-8601=seconds)" >> /var/log/cloud-init-bootstrap.log
+
+# ---------------------------------------------------------------------------
+# 7. Galutinis pranešimas
+# ---------------------------------------------------------------------------
+final_message: |
+  Bootstrap baigtas.
+  SSH    : ansible@${tailscale_hostname} (tik per Tailscale)
+  Docker : aktyvus (docker compose plugin įdiegtas)
+  UFW    : aktyvus (22/tcp – tik emergency, blokuojamas Hetzner lygyje)
