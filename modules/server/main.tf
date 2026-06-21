@@ -7,8 +7,8 @@ resource "hcloud_server" "web" {
   ssh_keys = [hcloud_ssh_key.my.id, hcloud_ssh_key.egidijos.id]
   
   public_net {
-    ipv4_enabled = true
-    ipv6_enabled = false
+    ipv4_enabled = false
+    ipv6_enabled = true
   }
 
   user_data = templatefile("cloud-init.yaml", {

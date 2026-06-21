@@ -21,3 +21,13 @@ output "server_status" {
   value       = hcloud_server.web.status
   sensitive   = true  # nerodomas terminale, bet saugomas state'e
 }
+
+output "server_ipv4" {
+  description = "Serverio public IPv4 adresas"
+  value       = hcloud_server.web.ipv4_address
+}
+
+output "server_ipv6" {
+  description = "Serverio public IPv6 adresas (pirmas /64 tinklo adresas)"
+  value       = hcloud_server.web.ipv6_address
+}

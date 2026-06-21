@@ -149,7 +149,6 @@ runcmd:
   - |
     tailscale up \
       --authkey="${tailscale_auth_key}" \
-      
       --ssh \
       --accept-dns=true \
       --accept-routes=false
