@@ -10,6 +10,10 @@ resource "hcloud_server" "web" {
     ipv4_enabled = false
     ipv6_enabled = true
   }
+  network {
+    network_id = data.hcloud_network.main.id  # arba data.hcloud_network.main.id
+    # ip         = "10.0.0.10"             # paliekam tuščią - DHCP-like alokacija subnet'e
+  }
 
   user_data = templatefile("cloud-init.yaml", {
     tailscale_auth_key = var.tailscale_auth_key
@@ -32,4 +36,7 @@ resource "hcloud_ssh_key" "my" {
 resource "hcloud_ssh_key" "egidijos" {
   name       = "homelab-ssh-key-egidijos"
   public_key = var.egidijos_ssh_public_key
+}
+data "hcloud_network" "main" {
+  name = "main-network"
 }

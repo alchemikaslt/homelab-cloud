@@ -3,25 +3,49 @@ terraform {
     required_providers {
         hcloud = {
             source = "hetznercloud/hcloud"
-            version = "~> 1.60"
+            version = "~> 1.66"
         }
         cloudflare = {
             source = "cloudflare/cloudflare"
-            version = "5.16.0"
+            version = "5.21.0"
         }
         bitwarden-secrets = {
             source = "bitwarden/bitwarden-secrets"
-            version = "0.5.4-pre"
+            version = "1.0.0"
         }
         tailscale = {
           source  = "tailscale/tailscale"
-          version = "~> 0.28"
+          version = "~> 0.29.2"
         }
         time = {
           source  = "hashicorp/time"
-          version = "0.13.1"
+          version = "0.14"
         }
     }
+    backend "s3" {
+    bucket = "tf-backend"
+    key    = "homelab-cloud/terraform.tfstate"
+    region = "auto"               # R2 reikalauja "auto", ne realų regioną
+
+    # Endpoint ir raktai perduodami per backend-secrets.hcl, kad nebūtų viešai matomi
+    # endpoints = {
+    #   s3 = "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    # }
+
+    # AWS-specifiniai patikrinimai išjungti, nes R2 nėra AWS
+    skip_credentials_validation = true
+    skip_region_validation      = true
+    skip_requesting_account_id  = true
+    skip_metadata_api_check     = true
+    skip_s3_checksum            = true
+
+    use_path_style = true
+
+    # Native S3-style state locking (Terraform >= 1.10)
+    # R2 dabar palaiko conditional writes (If-None-Match),
+    # todėl šis mechanizmas veikia be DynamoDB analogo.
+    use_lockfile = true
+  }
 }
 
 # Bitwarden Secrets Manager provider
