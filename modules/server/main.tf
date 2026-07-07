@@ -15,7 +15,7 @@ resource "hcloud_server" "web" {
     # ip         = "10.0.0.10"             # paliekam tuščią - DHCP-like alokacija subnet'e
   }
 
-  user_data = templatefile("cloud-init.yaml", {
+  user_data = templatefile("${path.module}/cloud-init.yaml.tpl", {
     tailscale_auth_key = var.tailscale_auth_key
     tailscale_hostname = local.hostname
     tailscale_tailnet = var.tailscale_tailnet

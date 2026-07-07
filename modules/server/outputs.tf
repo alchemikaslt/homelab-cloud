@@ -23,7 +23,7 @@ output "server_status" {
 }
 
 output "server_ipv4" {
-  description = "Serverio public IPv4 adresas"
+  description = "Serverio public IPv4 adresas. Šiuo metu IPv4 išjungtas"
   value       = hcloud_server.web.ipv4_address
 }
 

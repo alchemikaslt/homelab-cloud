@@ -23,7 +23,7 @@ timezone: Europe/Vilnius
 # ---------------------------------------------------------------------------
 preserve_hostname: false
 hostname: ${tailscale_hostname}
-fqdn: ${tailscale_hostname}.${tailscale_tailnet}.ts.net" 
+fqdn: "${tailscale_hostname}.${tailscale_tailnet}.ts.net"
 
 # ---------------------------------------------------------------------------
 # 3. Vartotojai

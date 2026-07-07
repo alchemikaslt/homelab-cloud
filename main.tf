@@ -60,7 +60,7 @@ provider "cloudflare" {
 }
 # Hetzner Cloud provider su secret iš Bitwarden
 provider "hcloud" {
-  token = local.hcloud_token
+  token = module.bitwarden_secrets.hcloud_token
 }
 # provider "tailscale" {
 #   api_key = data.bitwarden-secrets_secret.tailscale_api_key.value
@@ -77,14 +77,14 @@ provider "time" {
 
 module "server" {
   source = "./modules/server"
-  hcloud_token            = local.hcloud_token
+  hcloud_token            = module.bitwarden_secrets.hcloud_token
   my_ssh_public_key       = module.bitwarden_secrets.ssh_public_key
   # egidijos_ssh_public_key = data.bitwarden-secrets_secret.ssh_public_key_egidijos.value
   # ansible_ssh_public_key  = data.bitwarden-secrets_secret.ssh_public_key_egidijos.value
   egidijos_ssh_public_key = module.bitwarden_secrets.ssh_public_key_egidijos
   ansible_ssh_public_key  = module.bitwarden_secrets.ssh_public_key
   tailscale_auth_key      = tailscale_tailnet_key.server_key.key
-  tailscale_tailnet       = var.tailscale_tailnet
+  tailscale_tailnet       = module.bitwarden_secrets.tailscale_tailnet
 }
 module "bitwarden_secrets" {
   source = "./modules/bitwarden-secrets"

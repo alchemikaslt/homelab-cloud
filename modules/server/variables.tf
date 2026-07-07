@@ -30,6 +30,11 @@ variable "tailscale_tailnet" {
   type = string
   sensitive = false
 }
+variable "allowed_ssh_ips" {
+  description = "Sąrašas IP adresų (CIDR), kuriems leidžiama laikinai prisijungti per emergency SSH (port 22)"
+  type        = list(string)
+  default     = []
+}
 
 
 locals {

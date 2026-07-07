@@ -15,7 +15,7 @@ resource "time_sleep" "wait_for_tailscale" {
 
 data "tailscale_device" "server" {
   # name     = "${hcloud_server.web.name}.${var.tailscale_tailnet}.ts.net"  # turi sutapti su hostname
-  name     = "${module.server.server_name}.${var.tailscale_tailnet}.ts.net" 
+  name     = "${module.server.server_name}.${module.bitwarden_secrets.tailscale_tailnet}.ts.net" 
   wait_for = "120s"        # lauks kol device pasirodys API
 
   depends_on = [time_sleep.wait_for_tailscale]

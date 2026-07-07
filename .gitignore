@@ -9,7 +9,7 @@ crash.log
 # Sensitive variables
 *.tfvars
 *.tfvars.json
-backend.hcl
+backend-secrets.hcl
 
 # Override failai
 override.tf

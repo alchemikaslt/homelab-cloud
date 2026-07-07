@@ -1,6 +1,16 @@
 resource "hcloud_firewall" "closed_perimeter" {
   name = "homelab-closed-perimeter"
 
+  dynamic "rule" {
+    for_each = length(var.allowed_ssh_ips) > 0 ? [1] : []
+    content {
+      direction  = "in"
+      protocol   = "tcp"
+      port       = "22"
+      source_ips = var.allowed_ssh_ips
+    }
+  }
+  
   rule {
     direction       = "out"
     protocol        = "tcp"
