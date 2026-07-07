@@ -83,7 +83,6 @@ BW_ORGANIZATION_ID = "jūsų-org-id"
 # Bitwarden įrašų ID (IDs galima rasti Bitwarden SM konsolėje)
 secret_hcloud_token_id            = "jūsų-hcloud-token-id"
 secret_ssh_public_key_id          = "jūsų-ssh-public-key-id"
-secret_ssh_public_key_egidijos_id = "jūsų-ssh-public-key-egidijos-id"
 secret_cloudflare_api_token_id    = "jūsų-cloudflare-api-token-id"
 secret_tailscale_api_key_id       = "jūsų-tailscale-api-key-id"
 secret_tailscale_tailnet_id       = "jūsų-tailscale-tailnet-id"
